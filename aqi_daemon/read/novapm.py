@@ -7,7 +7,7 @@ import time
 
 from . import AqiRead, ReaderState, ReaderStatus
 import serial
-from typing import Union
+from typing import Union, Callable
 from sds011lib import SDS011QueryReader
 from statistics import mean
 
@@ -18,6 +18,7 @@ class OpinionatedReader:
     def __init__(
         self,
         ser_dev: Union[str, serial.Serial],
+        on_status_change: Callable[[ReaderStatus], None],
         warm_up_secs: int = 15,
         iterations: int = 5,
         sleep_time: int = 3,
@@ -28,6 +29,8 @@ class OpinionatedReader:
             ser_dev = serial.Serial(ser_dev, timeout=2)
 
         self.reader = SDS011QueryReader(ser_dev=ser_dev, send_command_sleep=command_wait_time)
+
+        self.on_status_change = on_status_change
 
         # Initial the reader to be in the mode we want.
         self.reader.wake()
@@ -64,3 +67,7 @@ class OpinionatedReader:
     def get_state(self) -> ReaderState:
         """Get the current state of the reader."""
         return self.state
+
+    def _change_state(self, status: ReaderStatus, exception: Exception | None) -> None:
+        self.state = ReaderState(status, exception)
+        self.on_status_change(status)

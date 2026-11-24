@@ -20,7 +20,7 @@ class ReportingReader:
         except Exception as e:
             self.reporter.report_error("Failed to retrieve data from reader", e)
 
-def build_reader(conf: Config) -> Reader:
+def build_reader(conf: Config, reporter: Reporter) -> Reader:
     """Retrieve the reader class.
 
     Uses LRU cache to simulate a singleton.
@@ -30,6 +30,7 @@ def build_reader(conf: Config) -> Reader:
     elif conf.reader_type == "NOVAPM":
         return OpinionatedReader(
                 ser_dev=conf.usb_path,
+                on_status_change=lambda x: reporter.report_status(x),
                 warm_up_secs=conf.warm_up_sec,
                 iterations=conf.sample_count_per_read,
                 sleep_time=conf.sleep_sec_between_reads,
