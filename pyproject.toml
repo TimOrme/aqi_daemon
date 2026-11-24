@@ -1,0 +1,8 @@
+[project]
+name = "aqi-daemon"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "schedule>=1.2.2",
+    "sds011lib>=0.5.0",
+]
