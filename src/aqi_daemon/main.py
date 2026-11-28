@@ -1,3 +1,4 @@
+import sys
 import time
 
 import schedule
@@ -6,7 +7,13 @@ from aqi_daemon.config import get_config_from_env, Config
 from aqi_daemon.read import Reader, AqiRead
 from aqi_daemon.read.mock import MockReader
 from aqi_daemon.read.novapm import OpinionatedReader
-from aqi_daemon.reporter import Reporter
+from aqi_daemon.reporter import Reporter, ReadReport
+from aqi_daemon.reporter.aqimon import AqiMonReporter
+
+import logging
+
+LOG = logging.getLogger(__name__)
+
 
 class ReportingReader:
     def __init__(self, reader: Reader, reporter: Reporter) -> None:
@@ -39,19 +46,35 @@ def build_reader(conf: Config, reporter: Reporter) -> Reader:
     else:
         raise Exception("Invalid reader type specified")
 
-async def read_from_device(reader: Reader, reporter: Reporter) -> None:
+def read_from_device(reader: Reader, reporter: Reporter) -> None:
     "Background cron task to read from the device."""
 
     try:
         # Set the approximate time of the next read
-        result: AqiRead = reader.read()
+        LOG.info("Reading...")
+        result = reader.read()
+        reporter.report_read(ReadReport(pmten=result.pmten, pmtwofive=result.pmtwofive))
     except Exception as e:
         reporter.report_error("Failed to retrieve data from reader", e)
 
 
-if __name__ == '__main__':
+def start():
     config = get_config_from_env()
-    schedule.every(config.poll_frequency_sec).seconds.do(read_from_device)
+
+    logging.basicConfig(level=logging.INFO)
+
+    if config.aqimon_url is None:
+        sys.exit("You must set an aqimon URL.")
+
+    reporter = AqiMonReporter(url=config.aqimon_url)
+    LOG.info("Configured reporter at %s", config.aqimon_url)
+
+    reader = build_reader(config, reporter)
+    LOG.info("Configured reader.")
+
+    schedule.every(config.poll_frequency_sec).seconds.do(lambda: read_from_device(reader, reporter))
+    LOG.info("Beginning polling every %s seconds", config.poll_frequency_sec)
+
 
     while True:
         schedule.run_pending()

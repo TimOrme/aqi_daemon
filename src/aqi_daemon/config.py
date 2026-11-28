@@ -22,6 +22,11 @@ class Config:
     # EPA Properties
     epa_lookback_minutes: int
 
+    # Reporter properties
+    reporter_type: str
+
+    aqimon_url: str | None
+
 
 
 DEFAULT_CONFIG = Config(
@@ -33,6 +38,8 @@ DEFAULT_CONFIG = Config(
     warm_up_sec=15,
     command_wait_time=1,
     sample_count_per_read=5,
+    reporter_type="aqimon",
+    aqimon_url=None
 )
 
 
@@ -49,4 +56,6 @@ def get_config_from_env() -> Config:
         command_wait_time=int(os.environ.get("AQIMON_COMMAND_WAIT_TIME", DEFAULT_CONFIG.command_wait_time)),
         sample_count_per_read=int(os.environ.get("AQIMON_SAMPLE_COUNT_PER_READ", DEFAULT_CONFIG.sample_count_per_read)),
         epa_lookback_minutes=int(os.environ.get("AQIMON_EPA_LOOKBACK_MIN", DEFAULT_CONFIG.epa_lookback_minutes)),
+        reporter_type=os.environ.get("AQID_REPORTER_TYPE", DEFAULT_CONFIG.reporter_type),
+        aqimon_url=os.environ.get("AQID_AQIMON_URL", DEFAULT_CONFIG.aqimon_url),
     )

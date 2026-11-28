@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, Set
 
 
 @dataclass(frozen=True)
 class ReadReport:
     """A raw read from an AQI device."""
 
-    pmtwofive: float | None
-    pmten: float| None
-    ground_level_ozone: float | None
-    carbon_monoxide: float | None
-    sulfur_dioxide: float | None
-    nitrogen_dioxide: float | None
+    pmtwofive: float | None = None
+    pmten: float| None = None
+    ground_level_ozone: float | None = None
+    carbon_monoxide: float | None = None
+    sulfur_dioxide: float | None = None
+    nitrogen_dioxide: float | None = None
 
 class ReaderStatus(Enum):
     IDLE = 0
